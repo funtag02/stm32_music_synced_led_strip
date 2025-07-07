@@ -3,66 +3,66 @@
 
 void setup() {
   strip.begin();
-  strip.show();
   strip.setBrightness(40); // = 40 / 255
   strip.show();
 
   Serial.begin(9600);
-}
+  Serial.println("Setting up the LED Strip System...");
 
-int inf_led; // first led of the snake
-int sup_led; // last led of the snake
+  // fill array with turned off leds
+  for (int i = 0; i < NUM_LEDS; i++) {
+    ledValues[i][0] = 0; // R
+    ledValues[i][1] = 0; // G
+    ledValues[i][2] = 0; // B
+  }
+}
 
 void loop() {
-  Serial.println("printing colors on led strip...");
-  // strip.setPixelColor(0, 40, 40, 130);
-  // strip.show();
+  float updateEachInSeconds = ( 60.0 / tempo ) / UPDATE_PRECISION; // 1/12s for 174 BPM (1/3s but 8 times more detailed)
+  unsigned long updateEachInMillis = (unsigned long)(updateEachInSeconds * 1000);
+  unsigned long currentTime = millis();
 
-  int ledValues[NUM_LEDS][3]; // n leds x (r, g, b) 
+  if (currentTime - lastUpdateTime >= updateEachInMillis) {
+    lastUpdateTime = currentTime;
 
-  // offset the snake by 1 at each iteration
-  if (inf_led > (NUM_LEDS - 4) ) {
-    inf_led = 0;
-    sup_led = 4;
-  } else {
-    inf_led++;
-    sup_led = inf_led + 4;
-  }
+    Serial.println("printing colors on led strip...");
 
-  // update leds array (snake)
-  for (int i = inf_led; i < sup_led; i++){
-    ledValues[i][0] = 255;
-    ledValues[i][1] = 0;
-    ledValues[i][2] = 0;
-  }
-
-  // update all other leds (everything but the snake)
-  for (int i = 0; i < NUM_LEDS; i++){
-    if (i < inf_led || i > sup_led){
-      ledValues[i][0] = 5;
-      ledValues[i][1] = 5;
-      ledValues[i][2] = 5;
+    // shift all leds to the right (by 1)
+    for(int i = NUM_LEDS; i >= 1; i--) {
+      ledValues[i][0] = ledValues[i - 1][0];
+      ledValues[i][1] = ledValues[i - 1][1];
+      ledValues[i][2] = ledValues[i - 1][2];
     }
-  }
 
-  /*
-  for (int i = 0; i < NUM_LEDS; i++) {
-    ledValues[i][0] = random(0, 256); // R
-    ledValues[i][1] = random(0, 256); // G
-    ledValues[i][2] = random(0, 256); // B
-  }
-  */
+    // TEMPORARY LOGIC : add new value to the first led
+    if (tmpIterationColor == 3){
+      tmpIterationColor = 0;
+    }
+    switch (tmpIterationColor){
+      case 0:
+        ledValues[0][0] = 255;
+        ledValues[0][1] = 0;
+        ledValues[0][2] = 0;
+        break;
 
-  // update the strip, with new array, then display colors
-  for (int i = 0; i < NUM_LEDS; i++) {
-    strip.setPixelColor(i, ledValues[i][0], ledValues[i][1], ledValues[i][2]);
-  }
-  strip.show();
-}
+      case 1:
+        ledValues[0][0] = 0;
+        ledValues[0][1] = 255;
+        ledValues[0][2] = 0;
+        break;
+      
+      case 2:
+        ledValues[0][0] = 0;
+        ledValues[0][1] = 0;
+        ledValues[0][2] = 255;
+        break;
+    }
+    tmpIterationColor++;
 
-void setUniLedColor(int r, int g, int b) {
-  for (int i = 0; i < NUM_LEDS; i++) {
-      strip.setPixelColor(i, r, g, b);
+    // update the strip, with new array
+    for (int i = 0; i < NUM_LEDS; i++) {
+      strip.setPixelColor(i, ledValues[i][0], ledValues[i][1], ledValues[i][2]);
+    }
+    strip.show(); // display colors on strip
   }
-  strip.show();
 }
