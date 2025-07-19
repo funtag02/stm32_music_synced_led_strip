@@ -18,7 +18,7 @@ void setup() {
 }
 
 void loop() {
-  float updateEachInSeconds = ( 60.0 / tempo ) / UPDATE_PRECISION; // 1/12s for 174 BPM (1/3s but 8 times more detailed)
+  float updateEachInSeconds = ( 60.0 / tempo ) / UPDATE_PRECISION; // 1/24s for 174 BPM (1/3s but 8 times more detailed)
   unsigned long updateEachInMillis = (unsigned long)(updateEachInSeconds * 1000);
   unsigned long currentTime = millis();
 
