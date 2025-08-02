@@ -7,9 +7,9 @@ const i2s_config_t i2s_config = {
   .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
   .sample_rate = 44100,
   .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
-  .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-  .communication_format = I2S_COMM_FORMAT_I2S,
-  .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+  .channel_format = I2S_CHANNEL_FMT_ALL_LEFT,
+  .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+  .intr_alloc_flags = 0,
   .dma_buf_count = 8,
   .dma_buf_len = 64,
   .use_apll = false,
@@ -29,6 +29,7 @@ int initI2SMicrophone() {
   i2s_set_pin(I2S_NUM_0, &pin_config);
   i2s_zero_dma_buffer(I2S_NUM_0);
   // Serial.println("INMP441 is ready !");
+  Serial.printf("I2S PINS — SCK: %d, WS: %d, SD: %d\n", I2S_SCK, I2S_WS, I2S_SD);
   return 0;
 }
 
@@ -38,6 +39,10 @@ double readVolume_dBFS() {
   size_t bytes_read;
 
   i2s_read(I2S_NUM_0, (void*)buffer, sizeof(buffer), &bytes_read, portMAX_DELAY);
+
+  if (bytes_read == 0) {
+    Serial.println("I2S read returned 0 bytes!");
+  }
 
   int samples_read = bytes_read / sizeof(int32_t);
   double sum = 0;
@@ -53,8 +58,6 @@ double readVolume_dBFS() {
 
   double rms = sqrt(sum / samples_read);
   double dB = 20.0 * log10(rms + 1e-9); // +1e-9 pour éviter log(0)
-
-  // delay(100);
 
   return dB;
 }

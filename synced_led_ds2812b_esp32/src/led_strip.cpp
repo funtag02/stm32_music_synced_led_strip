@@ -19,7 +19,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN_LED_STRIP, NEO_GRB + N
 
 // only one strip for now
 int initLedStrip() {
-    Serial.println("setting up led stip...");
+    // Serial.println("setting up led stip...");
     strip.begin();
     strip.setBrightness(40); // = 40 / 255
     strip.show();
@@ -31,11 +31,15 @@ int initLedStrip() {
         ledValues[i][2] = 0; // B
     }
 
+    // this will be removed at the next iteration, as it's not saved in the ledValues array
+    strip.setPixelColor(0, 255, 255, 255);
+    strip.show();
+
     return 0;
 }
 
 int shiftLedColors(){
-    Serial.println("updating array : shifting leds to the right by 1...");
+    // Serial.println("updating array : shifting leds to the right by 1...");
     // shift all leds to the right (by 1)
     for (int i = NUM_LEDS; i >= 1; i--) {
         ledValues[i][0] = ledValues[i - 1][0];
@@ -47,7 +51,7 @@ int shiftLedColors(){
 }
 
 int tmpUpdateFirstLed(){
-  Serial.println("updating array : the first led's color...");
+  // Serial.println("updating array : the first led's color...");
   // TEMPORARY LOGIC : add new value to the first led
   if (tmpIterationColorPos == 3){
     tmpIterationColorPos = 0;
@@ -77,7 +81,7 @@ int tmpUpdateFirstLed(){
 }
 
 int updateStripLeds() {
-    Serial.println("Updating colors on led strip...");
+    // Serial.println("Updating colors on led strip...");
     // update the strip, with new array
     for (int i = 0; i < NUM_LEDS; i++) {
       strip.setPixelColor(i, ledValues[i][0], ledValues[i][1], ledValues[i][2]);
@@ -87,7 +91,7 @@ int updateStripLeds() {
 }
 
 int updateColorsOnLedStrip() {
-    Serial.println("updating colors on led strip...");
+    // Serial.println("updating colors on led strip...");
     float updateEachInSeconds = ( 60.0 / tempo ) / UPDATE_PRECISION; // 1/24s for 174 BPM (1/3s but 8 times more detailed)
     unsigned long updateEachInMillis = (unsigned long)(updateEachInSeconds * 1000);
     unsigned long currentTime = millis();
@@ -96,25 +100,25 @@ int updateColorsOnLedStrip() {
       lastUpdateTime = currentTime;
     
       if (shiftLedColors() == 0){
-        Serial.println("leds shifted to the right !");
+        // Serial.println("leds shifted to the right !");
       } else {
-        Serial.println("ERROR !!");
+        // Serial.println("ERROR !!");
         return 1;
       }
 
       if (tmpUpdateFirstLed() == 0){
-        Serial.println("TEMPORARY CODE CHUNK - updated first led value");
+        // Serial.println("TEMPORARY CODE CHUNK - updated first led value");
       } else {
-        Serial.println("ERROR !!");
+        // Serial.println("ERROR !!");
         return 1;
       }
 
-      Serial.println("Array has been successfully updated !");
+      // Serial.println("Array has been successfully updated !");
 
       if (updateStripLeds() == 0){
-        Serial.println("Led strip has been successfully updated !");
+        // Serial.println("Led strip has been successfully updated !");
       } else {
-        Serial.println("ERROR !!");
+        // Serial.println("ERROR !!");
         return 1;
       }
 
