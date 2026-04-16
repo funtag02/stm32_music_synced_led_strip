@@ -69,7 +69,7 @@ LEDS_PER_STRIP: int = 60                 # Number of virtual LEDs per strip
 # ---------------------------------------------------------------------------
 
 DEFAULT_BPM: float = 120.0          # Initial BPM on startup
-BPM_MULTIPLIER: float = 1.0         # Tick subdivisions (1.0 = 1 tick per beat)
+BPM_MULTIPLIER: float = 8.0         # Tick subdivisions (1.0 = 1 tick per beat)
 MIN_BPM: float = 20.0               # Guard against division by zero / absurd values
 MAX_BPM: float = 300.0
 
