@@ -1,0 +1,4 @@
+numpy>=1.26
+scipy>=1.12         # not used in V1 core but available for FFT alternatives
+pyaudio>=0.2.14
+pygame>=2.5
