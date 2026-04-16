@@ -175,6 +175,19 @@ class AudioAnalyzer:
         self._pa.terminate()
         logger.info("Audio stream closed.")
 
+    def get_agc_peaks(self) -> tuple[float, ...]:
+        """Return the current AGC peak estimate for each band.
+
+        The peak is the running maximum energy the AGC is tracking — it
+        represents the dynamic "ceiling" against which amplitude is normalised.
+        Useful for displaying "amplitude / peak" in the UI.
+
+        Returns:
+            Tuple of floats (one per band), each >= AGC_MIN_ENERGY.
+        """
+        with self._agc_lock:
+            return tuple(state.peak for state in self._agc_states)
+
     def get_latest_frame(self) -> AudioFrame | None:
         """Return the most recently processed AudioFrame, or None if not ready.
 

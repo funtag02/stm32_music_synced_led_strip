@@ -76,8 +76,18 @@ def main() -> None:
         # 3. Advance the snake (ticks only when the BPM interval has elapsed).
         engine.update(frame)
 
-        # 4. Render the current strip state.
-        renderer.render(engine.get_strips())
+        # 4. Build per-band metrics for the UI: (amplitude, agc_peak) pairs.
+        #    amplitude comes from the latest frame; peak from the AGC state.
+        band_metrics: list[tuple[float, float]] | None = None
+        if frame is not None:
+            peaks = analyzer.get_agc_peaks()
+            band_metrics = [
+                (band.amplitude, peaks[i])
+                for i, band in enumerate(frame.bands)
+            ]
+
+        # 5. Render the current strip state.
+        renderer.render(engine.get_strips(), band_metrics)
 
     # --- Teardown ---
     logger.info("Shutting down...")

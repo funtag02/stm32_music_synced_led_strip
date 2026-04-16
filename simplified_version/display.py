@@ -46,13 +46,19 @@ class BaseRenderer(ABC):
     """
 
     @abstractmethod
-    def render(self, strips: list[list[RGB]]) -> None:
+    def render(
+        self,
+        strips: list[list[RGB]],
+        band_metrics: list[tuple[float, float]] | None = None,
+    ) -> None:
         """Push the current strip state to the output (screen, UDP, serial…).
 
         Args:
-            strips: List of NUM_STRIPS lists, each with LEDS_PER_STRIP RGB tuples.
-                    strips[0] = Bass strip, strips[3] = Highs strip.
-                    Index 0 of each inner list = the "head" (newest) LED.
+            strips:       List of NUM_STRIPS lists, each with LEDS_PER_STRIP RGB tuples.
+                          strips[0] = Bass strip, strips[3] = Highs strip.
+                          Index 0 of each inner list = the "head" (newest) LED.
+            band_metrics: Optional list of (amplitude, agc_peak) pairs, one per band.
+                          Used by visual renderers to display live values next to labels.
         """
         ...
 
@@ -108,16 +114,26 @@ class PygameRenderer(BaseRenderer):
         self._input_rect  = pygame.Rect(0, 0, 0, 0)
         self._button_rect = pygame.Rect(0, 0, 0, 0)
 
+        # Latest band metrics — updated each render call.
+        self._band_metrics: list[tuple[float, float]] | None = None
+
     # ------------------------------------------------------------------
     # BaseRenderer implementation
     # ------------------------------------------------------------------
 
-    def render(self, strips: list[list[RGB]]) -> None:
+    def render(
+        self,
+        strips: list[list[RGB]],
+        band_metrics: list[tuple[float, float]] | None = None,
+    ) -> None:
         """Draw all strips and the BPM UI, then flip the display buffer.
 
         Args:
-            strips: Current LED state from SnakeEngine.get_strips().
+            strips:       Current LED state from SnakeEngine.get_strips().
+            band_metrics: List of (amplitude, agc_peak) per band — displayed
+                          next to each band label as "amp / peak".
         """
+        self._band_metrics = band_metrics  # store for _draw_strips to consume
         self._screen.fill(config.BACKGROUND_COLOR)
         self._draw_strips(strips)
         self._draw_bpm_ui()
@@ -164,8 +180,16 @@ class PygameRenderer(BaseRenderer):
             # Vertical centre of this strip's row.
             strip_y = config.STRIP_MARGIN_Y + band_idx * config.STRIP_GAP_Y
 
-            # Draw the band label above the strip.
-            label_surf = self._font_label.render(band.label, True, config.LABEL_COLOR)
+            # --- Band label + live amplitude/peak metric ---
+            if self._band_metrics and band_idx < len(self._band_metrics):
+                amp, peak = self._band_metrics[band_idx]
+                # Format: "Bass — 0.73 / 1.00"  (amplitude / agc_peak normalised to 1)
+                # We show peak as a raw float so the user can see AGC headroom.
+                metric_str = f"{band.label} — {amp:.2f} / {peak:.2f}"
+            else:
+                metric_str = band.label
+
+            label_surf = self._font_label.render(metric_str, True, config.LABEL_COLOR)
             self._screen.blit(label_surf, (config.STRIP_MARGIN_X, strip_y - 22))
 
             # Draw each LED as a filled circle.
